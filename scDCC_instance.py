@@ -28,7 +28,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='train',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--n_clusters', default=8, type=int)
-    parser.add_argument('--n_pairwise', default=0, type=int)
     parser.add_argument('--batch_size', default=256, type=int)
     parser.add_argument('--data_file', default='../data/10X_PBMC_select_2100.h5')
     parser.add_argument('--maxiter', default=2000, type=int)
@@ -38,9 +37,8 @@ if __name__ == "__main__":
     parser.add_argument('--update_interval', default=1, type=int)
     parser.add_argument('--tol', default=0.001, type=float)
     parser.add_argument('--ae_weights', default=None)
-    parser.add_argument('--save_dir', default='results/scDCC_p0_1/')
-    parser.add_argument('--ae_weight_file', default='AE_weights_p0_1.pth.tar')
-    
+    parser.add_argument('--save_dir', default='results/scDCC_I_1/')
+    parser.add_argument('--ae_weight_file', default='AE_weights_I_1.pth.tar')
 
     args = parser.parse_args()
 
@@ -75,14 +73,6 @@ if __name__ == "__main__":
     x_sd_median = np.median(x_sd)
     print("median of gene sd: %.5f" % x_sd_median)
 
-    if args.n_pairwise > 0:
-        ml_ind1, ml_ind2, cl_ind1, cl_ind2 = generate_random_pair(y, args.n_pairwise)
-
-        print("Must link paris: %d" % ml_ind1.shape[0])
-        print("Cannot link paris: %d" % cl_ind1.shape[0])
-    else:
-        ml_ind1, ml_ind2, cl_ind1, cl_ind2 = np.array([]), np.array([]), np.array([]), np.array([])
-
     sd = 2.5
 
     model = scDCC(input_dim=adata.n_vars, z_dim=32, n_clusters=args.n_clusters, 
@@ -105,10 +95,19 @@ if __name__ == "__main__":
     
     print('Pretraining time: %d seconds.' % int(time() - t0))
 
+    print('Calculate instance diffculties')
+
+    latent = model.encodeBatch(torch.tensor(adata.X).cuda()).cpu().numpy()
+    kmeans = KMeans(args.n_clusters, n_init=20)
+    y_pred = kmeans.fit_predict(latent)
+    instance_guidance = detect_wrong(y, y_pred)
+    I_unique, I_counts = np.unique(instance_guidance, return_counts=True)
+    print(dict(zip(I_unique, I_counts)))
+    instance_guidance = torch.tensor(instance_guidance, dtype=torch.float32).cuda()
+
     if not os.path.exists(args.save_dir):
             os.makedirs(args.save_dir)
 
     model.fit(X=adata.X, X_raw=adata.raw.X, sf=adata.obs.size_factors, y=y, batch_size=args.batch_size, num_epochs=args.maxiter, 
-                ml_ind1=ml_ind1, ml_ind2=ml_ind2, cl_ind1=cl_ind1, cl_ind2=cl_ind2,
-                update_interval=args.update_interval, tol=args.tol, save_dir=args.save_dir)
+                mask=instance_guidance, update_interval=args.update_interval, tol=args.tol, save_dir=args.save_dir)
     print('Total time: %d seconds.' % int(time() - t0))
