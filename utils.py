@@ -10,6 +10,25 @@ import torch.nn.init as init
 import torch.utils.data as data
 from scipy.linalg import norm
 
+def cluster_acc(y_true, y_pred):
+    """
+    Calculate clustering accuracy. Require scikit-learn installed
+    # Arguments
+        y: true labels, numpy.array with shape `(n_samples,)`
+        y_pred: predicted labels, numpy.array with shape `(n_samples,)`
+    # Return
+        accuracy, in [0,1]
+    """
+    y_true = y_true.astype(np.int64)
+    assert y_pred.size == y_true.size
+    D = max(y_pred.max(), y_true.max()) + 1
+    w = np.zeros((D, D), dtype=np.int64)
+    for i in range(y_pred.size):
+        w[y_pred[i], y_true[i]] += 1
+    from sklearn.utils.linear_assignment_ import linear_assignment
+    ind = linear_assignment(w.max() - w)
+    return sum([w[i, j] for i, j in ind]) * 1.0 / y_pred.size
+
 
 def generate_random_pair(y, num):
     """
@@ -119,3 +138,35 @@ def transitive_closure(ml_ind1, ml_ind2, cl_ind1, cl_ind2, n):
         cl_res1.append(x)
         cl_res2.append(y)
     return np.array(ml_res1), np.array(ml_res2), np.array(cl_res1), np.array(cl_res2)
+
+
+def detect_wrong(y_true, y_pred):
+    """
+    Simulating instance difficulty constraints. Require scikit-learn installed
+    
+    # Arguments
+        y: true labels, numpy.array with shape `(n_samples,)`
+        y_pred: predicted labels, numpy.array with shape `(n_samples,)`
+    # Return
+        A mask vector M =  1xn which indicates the difficulty degree
+        We treat k-means as weak learner and set low confidence (0.1) for incorrect instances.
+        Set high confidence (1) for correct instances.
+    """
+    y_true = y_true.astype(np.int64)
+    assert y_pred.size == y_true.size
+    D = max(y_pred.max(), y_true.max()) + 1
+    w = np.zeros((D, D), dtype=np.int64)
+    for i in range(y_pred.size):
+        w[y_pred[i], y_true[i]] += 1
+    from sklearn.utils.linear_assignment_ import linear_assignment
+    ind = linear_assignment(w.max() - w)
+    mapping_dict = {}
+    for pair in ind:
+        mapping_dict[pair[0]] = pair[1]
+    wrong_preds = []
+    for i in range(y_pred.size):
+        if mapping_dict[y_pred[i]] != y_true[i]:
+            wrong_preds.append(-.1)   # low confidence -0.1 set for k-means weak learner
+        else:
+            wrong_preds.append(1)
+    return np.array(wrong_preds)

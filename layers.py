@@ -29,7 +29,7 @@ class ZINBLoss(nn.Module):
         result = torch.mean(result)
         return result
 
-'''
+
 class GaussianNoise(nn.Module):
     def __init__(self, sigma=0):
         super(GaussianNoise, self).__init__()
@@ -39,7 +39,7 @@ class GaussianNoise(nn.Module):
         if self.training:
             x = x + self.sigma * torch.randn_like(x)
         return x
-'''
+
 
 class MeanAct(nn.Module):
     def __init__(self):

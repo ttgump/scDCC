@@ -6,6 +6,11 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
 from layers import ZINBLoss, MeanAct, DispAct
+import numpy as np
+from sklearn.cluster import KMeans
+import math, os
+from sklearn import metrics
+from utils import cluster_acc
 
 def buildNetwork(layers, type, activation="relu"):
     net = []
@@ -158,7 +163,7 @@ class scDCC(nn.Module):
 
     def fit(self, X, X_raw, sf, anchor=np.array([]), positive=np.array([]), negative=np.array([]), 
             ml_ind1=np.array([]), ml_ind2=np.array([]), cl_ind1=np.array([]), cl_ind2=np.array([]), 
-            mask=np.array([]), use_global=False, ml_p=1., cl_p=1., y=None, lr=1., batch_size=256, 
+            mask=None, use_global=False, ml_p=1., cl_p=1., y=None, lr=1., batch_size=256, 
             num_epochs=10, update_interval=1, tol=1e-3, save_dir=""):
         '''X: tensor data'''
         use_cuda = torch.cuda.is_available()
@@ -168,7 +173,10 @@ class scDCC(nn.Module):
         X = torch.tensor(X).cuda()
         X_raw = torch.tensor(X_raw).cuda()
         sf = torch.tensor(sf).cuda()
-        mask = torch.zeros(X.shape[0]).cuda()
+        if mask is not None:
+            mask = torch.tensor(mask).cuda()
+        else:
+            mask = torch.zeros(X.shape[0]).cuda()
         optimizer = optim.Adadelta(filter(lambda p: p.requires_grad, self.parameters()), lr=lr, rho=.95)
 
         print("Initializing cluster centers with kmeans.")
@@ -268,11 +276,13 @@ class scDCC(nn.Module):
                 if use_global == False:
                     cluster_loss = self.cluster_loss(target, qbatch)
                     recon_loss = self.zinb_loss(rawinputs, meanbatch, dispbatch, pibatch, sfinputs)
+                    instance_constraints_loss = self.difficulty_loss(qbatch, mask_batch)
                     loss = cluster_loss + recon_loss
                     loss.backward()
                     optimizer.step()
                     cluster_loss_val += cluster_loss.data * len(inputs)
                     recon_loss_val += recon_loss.data * len(inputs)
+                    instance_constraints_loss_val += instance_constraints_loss.data * len(inputs)
                     train_loss = cluster_loss_val + recon_loss_val + instance_constraints_loss_val
                 else:
                     cluster_loss = self.cluster_loss(target, qbatch)

@@ -17,7 +17,7 @@ from sklearn import metrics
 import h5py
 import scanpy.api as sc
 from preprocess import read_dataset, normalize
-from utils import cluster_acc, generate_random_pair, transitive_closure
+from utils import cluster_acc, generate_random_pair, detect_wrong
 
 
 
