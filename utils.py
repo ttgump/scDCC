@@ -9,6 +9,7 @@ import torch.nn as nn
 import torch.nn.init as init
 import torch.utils.data as data
 from scipy.linalg import norm
+from sklearn.metrics.pairwise import euclidean_distances
 
 def cluster_acc(y_true, y_pred):
     """
@@ -30,7 +31,7 @@ def cluster_acc(y_true, y_pred):
     return sum([w[i, j] for i, j in ind]) * 1.0 / y_pred.size
 
 
-def generate_random_pair(y, num):
+def generate_random_pair(y, num, error_rate=0):
     """
     Generate random pairwise constraints.
     """
@@ -44,6 +45,8 @@ def generate_random_pair(y, num):
                     return True
         return False
 
+    error_num = 0
+    num0 = num
     while num > 0:
         tmp1 = random.randint(0, y.shape[0] - 1)
         tmp2 = random.randint(0, y.shape[0] - 1)
@@ -54,13 +57,30 @@ def generate_random_pair(y, num):
         if check_ind(tmp1, tmp2, cl_ind1, cl_ind2):
             continue
         if y[tmp1] == y[tmp2]:
-            ml_ind1.append(tmp1)
-            ml_ind2.append(tmp2)
+            if error_num >= error_rate*num0:
+                ml_ind1.append(tmp1)
+                ml_ind2.append(tmp2)
+            else:
+                cl_ind1.append(tmp1)
+                cl_ind2.append(tmp2)
+                error_num += 1
         else:
-            cl_ind1.append(tmp1)
-            cl_ind2.append(tmp2)
+            if error_num >= error_rate*num0:
+                cl_ind1.append(tmp1)
+                cl_ind2.append(tmp2)
+            else:
+                ml_ind1.append(tmp1)
+                ml_ind2.append(tmp2) 
+                error_num += 1               
         num -= 1
-    return np.array(ml_ind1), np.array(ml_ind2), np.array(cl_ind1), np.array(cl_ind2)
+    ml_ind1, ml_ind2, cl_ind1, cl_ind2 = np.array(ml_ind1), np.array(ml_ind2), np.array(cl_ind1), np.array(cl_ind2)
+    ml_index = np.random.permutation(ml_ind1.shape[0])
+    cl_index = np.random.permutation(cl_ind1.shape[0])
+    ml_ind1 = ml_ind1[ml_index]
+    ml_ind2 = ml_ind2[ml_index]
+    cl_ind1 = cl_ind1[cl_index]
+    cl_ind2 = cl_ind2[cl_index]
+    return ml_ind1, ml_ind2, cl_ind1, cl_ind2, error_num
 
 
 def transitive_closure(ml_ind1, ml_ind2, cl_ind1, cl_ind2, n):
@@ -170,3 +190,49 @@ def detect_wrong(y_true, y_pred):
         else:
             wrong_preds.append(1)
     return np.array(wrong_preds)
+
+def generate_triplet_constraints_continuous(y, num, latent_file, error_rate=0):
+#   Generate random triplet constraints
+    def check_ind(anchor, pos, neg, anchor_inds, pos_inds, neg_inds):
+        for (a1, p1, n1) in zip(anchor_inds, pos_inds, neg_inds):
+                if anchor == a1 and pos == p1 and neg == n1:
+                    return True
+        return False
+    latent_embedding = np.loadtxt(latent_file, delimiter=',')
+    latent_dist = euclidean_distances(latent_embedding, latent_embedding)
+    latent_dist_tril = np.tril(latent_dist, -1)
+    latent_dist_vec = latent_dist_tril.flatten()
+    latent_dist_vec = latent_dist_vec[latent_dist_vec>0]
+    cutoff = np.quantile(latent_dist_vec, 0.8)
+    anchor_inds, pos_inds, neg_inds = [], [], []
+    error_num = 0
+    num0 = num
+    while num > 0:
+        tmp_anchor_index = random.randint(0, y.shape[0] - 1)
+        tmp_pos_index = random.randint(0, y.shape[0] - 1)
+        tmp_neg_index = random.randint(0, y.shape[0] - 1)
+        if check_ind(tmp_anchor_index, tmp_pos_index, tmp_neg_index, anchor_inds, pos_inds, neg_inds):
+            continue
+        pos_distance = norm(latent_embedding[tmp_anchor_index]-latent_embedding[tmp_pos_index], 2)
+        neg_distance = norm(latent_embedding[tmp_anchor_index]-latent_embedding[tmp_neg_index], 2)
+
+        if neg_distance <= pos_distance + cutoff:
+            continue
+        if error_num >= error_rate*num0:
+            anchor_inds.append(tmp_anchor_index)
+            pos_inds.append(tmp_pos_index)
+            neg_inds.append(tmp_neg_index)
+        else:
+            anchor_inds.append(tmp_anchor_index)
+            pos_inds.append(tmp_neg_index)
+            neg_inds.append(tmp_pos_index)
+            error_num += 1
+        num -= 1
+
+    anchor_inds, pos_inds, neg_inds = np.array(anchor_inds), np.array(pos_inds), np.array(neg_inds)
+    anchor_index = np.random.permutation(anchor_inds.shape[0])
+    anchor_inds = anchor_inds[anchor_index]
+    pos_inds = pos_inds[anchor_index]
+    neg_inds = neg_inds[anchor_index]
+    
+    return anchor_inds, pos_inds, neg_inds, error_num
