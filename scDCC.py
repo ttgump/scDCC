@@ -355,7 +355,7 @@ class scDCC(nn.Module):
 
             if ml_num_batch >0 and cl_num_batch > 0:
                 print("Pairwise Total:", round(float(ml_loss.cpu()), 2) + float(cl_loss.cpu()), "ML loss", float(ml_loss.cpu()), "CL loss:", float(cl_loss.cpu()))
-            triplet_loss = 0.0
+            triplet_loss_value = 0.0
             if epoch % update_triplet == 0:
                 for tri_batch_idx in range(tri_num_batch):
                     px1 = X[anchor[tri_batch_idx*batch_size : min(tri_num, (tri_batch_idx+1)*batch_size)]]
@@ -374,11 +374,11 @@ class scDCC(nn.Module):
                     z1, q1, _, _, _ = self.forward(inputs1)
                     z2, q2, _, _, _ = self.forward(inputs2)
                     z3, q3, _, _, _ = self.forward(inputs3)
-                    loss = self.triplet_loss(q1, q2, q3, 0.1)
-                    triplet_loss += loss.data
+                    loss = self.triplet_loss(q1, q2, q3, .2)
+                    triplet_loss_value += loss.data
                     loss.backward()
                     optimizer.step()
             if tri_num_batch > 0:
-                print("Triplet Loss:", triplet_loss)
+                print("Triplet Loss:", float(triplet_loss_value.cpu()))
 
         return final_acc, final_nmi, final_ari, final_epoch
