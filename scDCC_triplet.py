@@ -16,7 +16,7 @@ from sklearn import metrics
 import h5py
 import scanpy.api as sc
 from preprocess import read_dataset, normalize
-from utils import cluster_acc, generate_random_pair
+from utils import cluster_acc, generate_random_pair, generate_triplet_constraints_continuous
 
 
 
@@ -27,8 +27,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='train',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--n_clusters', default=8, type=int)
-    parser.add_argument('--n_pairwise', default=0, type=int)
-    parser.add_argument('--n_pairwise_error', default=0, type=float)
+    parser.add_argument('--n_triplet', default=0, type=int)
+    parser.add_argument('--n_triplet_error', default=0, type=float)
     parser.add_argument('--batch_size', default=256, type=int)
     parser.add_argument('--data_file', default='../data/10X_PBMC_select_2100.h5')
     parser.add_argument('--maxiter', default=2000, type=int)
@@ -40,6 +40,7 @@ if __name__ == "__main__":
     parser.add_argument('--ae_weights', default=None)
     parser.add_argument('--save_dir', default='results/scDCC_p0_1/')
     parser.add_argument('--ae_weight_file', default='AE_weights_p0_1.pth.tar')
+    parser.add_argument('--latent_file', default='FINAL_latent.csv')
     
 
     args = parser.parse_args()
@@ -75,14 +76,14 @@ if __name__ == "__main__":
     x_sd_median = np.median(x_sd)
     print("median of gene sd: %.5f" % x_sd_median)
 
-    if args.n_pairwise > 0:
-        ml_ind1, ml_ind2, cl_ind1, cl_ind2, error_num = generate_random_pair(y, args.n_pairwise, args.n_pairwise_error)
+#    ml_ind1, ml_ind2, cl_ind1, cl_ind2 = np.array([]), np.array([]), np.array([]), np.array([])
+    if args.n_triplet > 0:
+        anchor, positive, negative, error_num = generate_triplet_constraints_continuous(y, args.n_triplet, args.latent_file, args.n_triplet_error)
 
-        print("Must link paris: %d" % ml_ind1.shape[0])
-        print("Cannot link paris: %d" % cl_ind1.shape[0])
+        print("Triplet paris: %d" % anchor.shape[0])
         print("Number of error pairs: %d" % error_num)
     else:
-        ml_ind1, ml_ind2, cl_ind1, cl_ind2 = np.array([]), np.array([]), np.array([]), np.array([])
+        anchor = np.array([])
 
     sd = 2.5
 
@@ -110,6 +111,6 @@ if __name__ == "__main__":
             os.makedirs(args.save_dir)
 
     model.fit(X=adata.X, X_raw=adata.raw.X, sf=adata.obs.size_factors, y=y, batch_size=args.batch_size, num_epochs=args.maxiter, 
-                ml_ind1=ml_ind1, ml_ind2=ml_ind2, cl_ind1=cl_ind1, cl_ind2=cl_ind2,
+                anchor=anchor, positive=positive, negative=negative,
                 update_interval=args.update_interval, tol=args.tol, save_dir=args.save_dir)
     print('Total time: %d seconds.' % int(time() - t0))
