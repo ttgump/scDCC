@@ -31,7 +31,7 @@ if __name__ == "__main__":
     parser.add_argument('--n_pairwise_2', default=0, type=int)
     parser.add_argument('--n_pairwise_error', default=0, type=float)
     parser.add_argument('--batch_size', default=256, type=int)
-    parser.add_argument('--data_file', default='../data/CITE_PBMC_counts_top2000.h5')
+    parser.add_argument('--data_file', default='../data/CITE_PBMC_counts.h5')
     parser.add_argument('--maxiter', default=2000, type=int)
     parser.add_argument('--pretrain_epochs', default=300, type=int)
     parser.add_argument('--gamma', default=1., type=float,
