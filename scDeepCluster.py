@@ -27,7 +27,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='train',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--n_clusters', default=8, type=int)
-    parser.add_argument('--label_cells', default=0.1, type=float)
+    parser.add_argument('--label_cells', default=0.2, type=float)
     parser.add_argument('--label_cells_files', default='label_selected_cells_1.txt')
     parser.add_argument('--n_pairwise', default=0, type=int)
     parser.add_argument('--n_pairwise_error', default=0, type=float)
@@ -51,6 +51,17 @@ if __name__ == "__main__":
     y = np.array(data_mat['Y'])
     data_mat.close()
 
+    if not os.path.exists(args.label_cells_files):
+        indx = np.arange(len(y))
+        np.random.shuffle(indx)
+        label_cell_indx = indx[0:int(np.ceil(args.label_cells*len(y)))]
+    else:
+        label_cell_indx = np.loadtxt(args.label_cells_files, dtype=np.int)
+
+    eva_indx = np.delete(np.arange(len(y)), label_cell_indx)
+    x = x[eva_indx,:]
+    y = y[eva_indx]
+
     # preprocessing scRNA-seq read counts matrix
     adata = sc.AnnData(x)
     adata.obs['Group'] = y
@@ -72,25 +83,11 @@ if __name__ == "__main__":
     print(adata.X.shape)
     print(y.shape)
 
-    if not os.path.exists(args.label_cells_files):
-        indx = np.arange(len(y))
-        np.random.shuffle(indx)
-        label_cell_indx = indx[0:int(np.ceil(args.label_cells*len(y)))]
-    else:
-        label_cell_indx = np.loadtxt(args.label_cells_files, dtype=np.int)
-
     x_sd = adata.X.std(0)
     x_sd_median = np.median(x_sd)
     print("median of gene sd: %.5f" % x_sd_median)
 
-    if args.n_pairwise > 0:
-        ml_ind1, ml_ind2, cl_ind1, cl_ind2, error_num = generate_random_pair(y, label_cell_indx, args.n_pairwise, args.n_pairwise_error)
-
-        print("Must link paris: %d" % ml_ind1.shape[0])
-        print("Cannot link paris: %d" % cl_ind1.shape[0])
-        print("Number of error pairs: %d" % error_num)
-    else:
-        ml_ind1, ml_ind2, cl_ind1, cl_ind2 = np.array([]), np.array([]), np.array([]), np.array([])
+    ml_ind1, ml_ind2, cl_ind1, cl_ind2 = np.array([]), np.array([]), np.array([]), np.array([])
 
     sd = 2.5
 

@@ -42,7 +42,10 @@ if __name__ == "__main__":
     parser.add_argument('--ae_weights', default=None)
     parser.add_argument('--save_dir', default='results/scDCC_p0_1/')
     parser.add_argument('--ae_weight_file', default='AE_weights_p0_1.pth.tar')
-    
+    parser.add_argument('--constraints_file', default='p0_1')
+    parser.add_argument('--pretrain_latent_file', default='AE_latent.csv')
+    parser.add_argument('--final_latent_file', default='FINAL_latent.csv')
+
 
     args = parser.parse_args()
 
@@ -89,6 +92,11 @@ if __name__ == "__main__":
         print("Must link paris: %d" % ml_ind1.shape[0])
         print("Cannot link paris: %d" % cl_ind1.shape[0])
         print("Number of error pairs: %d" % error_num)
+
+        np.savetxt('ml_ind1_'+args.constraints_file+'.csv', ml_ind1, delimiter=",")
+        np.savetxt('ml_ind2_'+args.constraints_file+'.csv', ml_ind2, delimiter=",")
+        np.savetxt('cl_ind1_'+args.constraints_file+'.csv', cl_ind1, delimiter=",")
+        np.savetxt('cl_ind2_'+args.constraints_file+'.csv', cl_ind2, delimiter=",")
     else:
         ml_ind1, ml_ind2, cl_ind1, cl_ind2 = np.array([]), np.array([]), np.array([]), np.array([])
 
@@ -114,6 +122,9 @@ if __name__ == "__main__":
     
     print('Pretraining time: %d seconds.' % int(time() - t0))
 
+    pretrain_latent = model.encodeBatch(torch.tensor(adata.X).cuda()).cpu().numpy()
+    np.savetxt(args.pretrain_latent_file, pretrain_latent, delimiter=",")
+
     if not os.path.exists(args.save_dir):
             os.makedirs(args.save_dir)
 
@@ -131,3 +142,6 @@ if __name__ == "__main__":
 
     if not os.path.exists(args.label_cells_files):
         np.savetxt(args.label_cells_files, label_cell_indx, fmt="%i")
+
+    final_latent = model.encodeBatch(torch.tensor(adata.X).cuda()).cpu().numpy()
+    np.savetxt(args.final_latent_file, final_latent, delimiter=",")

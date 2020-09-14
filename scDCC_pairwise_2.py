@@ -16,7 +16,7 @@ from sklearn import metrics
 import h5py
 import scanpy.api as sc
 from preprocess import read_dataset, normalize
-from utils import cluster_acc, generate_random_pair
+from utils import cluster_acc, generate_random_pair, generate_random_pair_from_embedding, generate_random_pair_from_markers_2
 
 
 
@@ -26,13 +26,12 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description='train',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--n_clusters', default=8, type=int)
-    parser.add_argument('--label_cells', default=0.1, type=float)
-    parser.add_argument('--label_cells_files', default='label_selected_cells_1.txt')
-    parser.add_argument('--n_pairwise', default=0, type=int)
+    parser.add_argument('--n_clusters', default=12, type=int)
+    parser.add_argument('--n_pairwise_1', default=0, type=int)
+    parser.add_argument('--n_pairwise_2', default=0, type=int)
     parser.add_argument('--n_pairwise_error', default=0, type=float)
     parser.add_argument('--batch_size', default=256, type=int)
-    parser.add_argument('--data_file', default='../data/10X_PBMC_select_2100.h5')
+    parser.add_argument('--data_file', default='../data/CITE_PBMC_counts_top2000.h5')
     parser.add_argument('--maxiter', default=2000, type=int)
     parser.add_argument('--pretrain_epochs', default=300, type=int)
     parser.add_argument('--gamma', default=1., type=float,
@@ -42,6 +41,7 @@ if __name__ == "__main__":
     parser.add_argument('--ae_weights', default=None)
     parser.add_argument('--save_dir', default='results/scDCC_p0_1/')
     parser.add_argument('--ae_weight_file', default='AE_weights_p0_1.pth.tar')
+    parser.add_argument('--latent_z', default='latent_p0_1.txt')
     
 
     args = parser.parse_args()
@@ -49,7 +49,10 @@ if __name__ == "__main__":
     data_mat = h5py.File(args.data_file)
     x = np.array(data_mat['X'])
     y = np.array(data_mat['Y'])
+    embedding = np.array(data_mat['ADT_X'])
     data_mat.close()
+
+    markers = np.loadtxt("adt_CD_normalized_counts.txt", delimiter=',')
 
     # preprocessing scRNA-seq read counts matrix
     adata = sc.AnnData(x)
@@ -71,26 +74,34 @@ if __name__ == "__main__":
 
     print(adata.X.shape)
     print(y.shape)
-
-    if not os.path.exists(args.label_cells_files):
-        indx = np.arange(len(y))
-        np.random.shuffle(indx)
-        label_cell_indx = indx[0:int(np.ceil(args.label_cells*len(y)))]
-    else:
-        label_cell_indx = np.loadtxt(args.label_cells_files, dtype=np.int)
+    print(embedding.shape)
 
     x_sd = adata.X.std(0)
     x_sd_median = np.median(x_sd)
     print("median of gene sd: %.5f" % x_sd_median)
 
-    if args.n_pairwise > 0:
-        ml_ind1, ml_ind2, cl_ind1, cl_ind2, error_num = generate_random_pair(y, label_cell_indx, args.n_pairwise, args.n_pairwise_error)
+    if args.n_pairwise_1 > 0:
+        ml_ind1_1, ml_ind2_1, cl_ind1_1, cl_ind2_1, error_num_1 = generate_random_pair_from_embedding(embedding, args.n_pairwise_1, 0.005, 0.95, args.n_pairwise_error)
 
-        print("Must link paris: %d" % ml_ind1.shape[0])
-        print("Cannot link paris: %d" % cl_ind1.shape[0])
-        print("Number of error pairs: %d" % error_num)
+        print("Must link paris: %d" % ml_ind1_1.shape[0])
+        print("Cannot link paris: %d" % cl_ind1_1.shape[0])
+        print("Number of error pairs: %d" % error_num_1)
     else:
-        ml_ind1, ml_ind2, cl_ind1, cl_ind2 = np.array([]), np.array([]), np.array([]), np.array([])
+        ml_ind1_1, ml_ind2_1, cl_ind1_1, cl_ind2_1 = np.array([]), np.array([]), np.array([]), np.array([])
+
+    if args.n_pairwise_2 > 0:
+        ml_ind1_2, ml_ind2_2, cl_ind1_2, cl_ind2_2, error_num_2 = generate_random_pair_from_markers_3(markers, args.n_pairwise_2, 0.3, 0.7, 0.3, 0.85, args.n_pairwise_error)
+
+        print("Must link paris: %d" % ml_ind1_2.shape[0])
+        print("Cannot link paris: %d" % cl_ind1_2.shape[0])
+        print("Number of error pairs: %d" % error_num_2)
+    else:
+        ml_ind1_2, ml_ind2_2, cl_ind1_2, cl_ind2_2 = np.array([]), np.array([]), np.array([]), np.array([])
+
+    ml_ind1 = np.append(ml_ind1_1, ml_ind1_2)
+    ml_ind2 = np.append(ml_ind2_1, ml_ind2_2)
+    cl_ind1 = np.append(cl_ind1_1, cl_ind1_2)
+    cl_ind2 = np.append(cl_ind2_1, cl_ind2_2)
 
     sd = 2.5
 
@@ -122,12 +133,13 @@ if __name__ == "__main__":
                 update_interval=args.update_interval, tol=args.tol, save_dir=args.save_dir)
     print('Total time: %d seconds.' % int(time() - t0))
 
-    eval_cell_y_pred = np.delete(y_pred, label_cell_indx)
-    eval_cell_y = np.delete(y, label_cell_indx)
-    acc = np.round(cluster_acc(eval_cell_y, eval_cell_y_pred), 5)
-    nmi = np.round(metrics.normalized_mutual_info_score(eval_cell_y, eval_cell_y_pred), 5)
-    ari = np.round(metrics.adjusted_rand_score(eval_cell_y, eval_cell_y_pred), 5)
+    acc = np.round(cluster_acc(y, y_pred), 5)
+    nmi = np.round(metrics.normalized_mutual_info_score(y, y_pred), 5)
+    ari = np.round(metrics.adjusted_rand_score(y, y_pred), 5)
     print('Evaluating cells: ACC= %.4f, NMI= %.4f, ARI= %.4f' % (acc, nmi, ari))
 
-    if not os.path.exists(args.label_cells_files):
-        np.savetxt(args.label_cells_files, label_cell_indx, fmt="%i")
+    latent_z0 = model.encodeBatch(torch.tensor(adata.X).cuda())
+    latent_z = latent_z0.data.cpu().numpy()
+    np.savetxt(args.latent_z, latent_z, delimiter=",")
+    np.savetxt('pred_y_'+args.latent_z, np.array(y_pred), delimiter=",")
+    print('Total time: %d seconds.' % int(time() - t0))
