@@ -16,7 +16,7 @@ from sklearn import metrics
 import h5py
 import scanpy.api as sc
 from preprocess import read_dataset, normalize
-from utils import cluster_acc, generate_random_pair, generate_random_pair_from_embedding, generate_random_pair_from_embedding_clustering
+from utils import cluster_acc, generate_random_pair_from_embedding_clustering
 
 
 
@@ -28,9 +28,8 @@ if __name__ == "__main__":
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--n_clusters', default=11, type=int)
     parser.add_argument('--n_pairwise', default=0, type=int)
-    parser.add_argument('--n_pairwise_error', default=0, type=float)
     parser.add_argument('--batch_size', default=256, type=int)
-    parser.add_argument('--data_file', default='../data/HumanLiver_counts.h5')
+    parser.add_argument('--data_file', default='../data/HumanLiver_counts_top5000.h5')
     parser.add_argument('--maxiter', default=2000, type=int)
     parser.add_argument('--pretrain_epochs', default=300, type=int)
     parser.add_argument('--gamma', default=1., type=float,
@@ -79,11 +78,10 @@ if __name__ == "__main__":
     print("median of gene sd: %.5f" % x_sd_median)
 
     if args.n_pairwise > 0:
-        ml_ind1, ml_ind2, cl_ind1, cl_ind2, error_num = generate_random_pair_from_embedding_clustering(zifa_latent, args.n_pairwise, args.n_clusters, ML=0.005, CL=0.8, error_rate=args.n_pairwise_error)
+        ml_ind1, ml_ind2, cl_ind1, cl_ind2 = generate_random_pair_from_embedding_clustering(zifa_latent, args.n_pairwise, args.n_clusters, ML=0.005, CL=0.8)
 
         print("Must link paris: %d" % ml_ind1.shape[0])
         print("Cannot link paris: %d" % cl_ind1.shape[0])
-        print("Number of error pairs: %d" % error_num)
     else:
         ml_ind1, ml_ind2, cl_ind1, cl_ind2 = np.array([]), np.array([]), np.array([]), np.array([])
 

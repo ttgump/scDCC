@@ -16,7 +16,7 @@ from sklearn import metrics
 import h5py
 import scanpy.api as sc
 from preprocess import read_dataset, normalize
-from utils import cluster_acc, generate_random_pair, generate_random_pair_from_embedding, generate_random_pair_from_markers_2
+from utils import cluster_acc, generate_random_pair_from_proteins, generate_random_pair_from_CD_markers
 
 
 
@@ -29,9 +29,8 @@ if __name__ == "__main__":
     parser.add_argument('--n_clusters', default=12, type=int)
     parser.add_argument('--n_pairwise_1', default=0, type=int)
     parser.add_argument('--n_pairwise_2', default=0, type=int)
-    parser.add_argument('--n_pairwise_error', default=0, type=float)
     parser.add_argument('--batch_size', default=256, type=int)
-    parser.add_argument('--data_file', default='../data/CITE_PBMC_counts.h5')
+    parser.add_argument('--data_file', default='../data/CITE_PBMC_counts_top2000.h5')
     parser.add_argument('--maxiter', default=2000, type=int)
     parser.add_argument('--pretrain_epochs', default=300, type=int)
     parser.add_argument('--gamma', default=1., type=float,
@@ -81,20 +80,18 @@ if __name__ == "__main__":
     print("median of gene sd: %.5f" % x_sd_median)
 
     if args.n_pairwise_1 > 0:
-        ml_ind1_1, ml_ind2_1, cl_ind1_1, cl_ind2_1, error_num_1 = generate_random_pair_from_embedding(embedding, args.n_pairwise_1, 0.005, 0.95, args.n_pairwise_error)
+        ml_ind1_1, ml_ind2_1, cl_ind1_1, cl_ind2_1 = generate_random_pair_from_proteins(embedding, args.n_pairwise_1, 0.005, 0.95)
 
         print("Must link paris: %d" % ml_ind1_1.shape[0])
         print("Cannot link paris: %d" % cl_ind1_1.shape[0])
-        print("Number of error pairs: %d" % error_num_1)
     else:
         ml_ind1_1, ml_ind2_1, cl_ind1_1, cl_ind2_1 = np.array([]), np.array([]), np.array([]), np.array([])
 
     if args.n_pairwise_2 > 0:
-        ml_ind1_2, ml_ind2_2, cl_ind1_2, cl_ind2_2, error_num_2 = generate_random_pair_from_markers_3(markers, args.n_pairwise_2, 0.3, 0.7, 0.3, 0.85, args.n_pairwise_error)
+        ml_ind1_2, ml_ind2_2, cl_ind1_2, cl_ind2_2 = generate_random_pair_from_CD_markers(markers, args.n_pairwise_2, 0.3, 0.7, 0.3, 0.85)
 
         print("Must link paris: %d" % ml_ind1_2.shape[0])
         print("Cannot link paris: %d" % cl_ind1_2.shape[0])
-        print("Number of error pairs: %d" % error_num_2)
     else:
         ml_ind1_2, ml_ind2_2, cl_ind1_2, cl_ind2_2 = np.array([]), np.array([]), np.array([]), np.array([])
 

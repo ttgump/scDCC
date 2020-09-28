@@ -82,7 +82,7 @@ def generate_random_pair(y, label_cell_indx, num, error_rate=0):
     return ml_ind1, ml_ind2, cl_ind1, cl_ind2, error_num
 
 
-def generate_random_pair_from_embedding(latent_embedding, num, ML=0.1, CL=0.9, error_rate=0):
+def generate_random_pair_from_proteins(latent_embedding, num, ML=0.1, CL=0.9):
     """
     Generate random pairwise constraints.
     """
@@ -102,8 +102,6 @@ def generate_random_pair_from_embedding(latent_embedding, num, ML=0.1, CL=0.9, e
     cutoff_ML = np.quantile(latent_dist_vec, ML)
     cutoff_CL = np.quantile(latent_dist_vec, CL)
 
-    error_num = 0
-    num0 = num
     while num > 0:
         tmp1 = random.randint(0, latent_embedding.shape[0] - 1)
         tmp2 = random.randint(0, latent_embedding.shape[0] - 1)
@@ -112,21 +110,11 @@ def generate_random_pair_from_embedding(latent_embedding, num, ML=0.1, CL=0.9, e
         if check_ind(tmp1, tmp2, ml_ind1, ml_ind2):
             continue
         if norm(latent_embedding[tmp1] - latent_embedding[tmp2], 2) < cutoff_ML:
-            if error_num >= error_rate*num0:
-                ml_ind1.append(tmp1)
-                ml_ind2.append(tmp2)
-            else:
-                cl_ind1.append(tmp1)
-                cl_ind2.append(tmp2)
-                error_num += 1
+            ml_ind1.append(tmp1)
+            ml_ind2.append(tmp2)
         elif norm(latent_embedding[tmp1] - latent_embedding[tmp2], 2) > cutoff_CL:
-            if error_num >= error_rate*num0:
-                cl_ind1.append(tmp1)
-                cl_ind2.append(tmp2)
-            else:
-                ml_ind1.append(tmp1)
-                ml_ind2.append(tmp2) 
-                error_num += 1
+            cl_ind1.append(tmp1)
+            cl_ind2.append(tmp2)
         else:
             continue
         num -= 1
@@ -137,138 +125,10 @@ def generate_random_pair_from_embedding(latent_embedding, num, ML=0.1, CL=0.9, e
     ml_ind2 = ml_ind2[ml_index]
     cl_ind1 = cl_ind1[cl_index]
     cl_ind2 = cl_ind2[cl_index]
-    return ml_ind1, ml_ind2, cl_ind1, cl_ind2, error_num
+    return ml_ind1, ml_ind2, cl_ind1, cl_ind2
 
 
-def generate_random_pair_from_markers(markers, num, low=0.25, high=0.75, error_rate=0):
-    """
-    Generate random pairwise constraints.
-    """
-    ml_ind1, ml_ind2 = [], []
-    cl_ind1, cl_ind2 = [], []
-
-    def check_ind(ind1, ind2, ind_list1, ind_list2):
-        for (l1, l2) in zip(ind_list1, ind_list2):
-                if ind1 == l1 and ind2 == l2:
-                    return True
-        return False
-
-    gene_low1 = np.quantile(markers[0], low)
-    gene_high1 = np.quantile(markers[0], high)
-    gene_low2 = np.quantile(markers[1], low)
-    gene_high2 = np.quantile(markers[1], high)
-
-    error_num = 0
-    num0 = num
-    while num > 0:
-        tmp1 = random.randint(0, markers.shape[1] - 1)
-        tmp2 = random.randint(0, markers.shape[1] - 1)
-        if tmp1 == tmp2:
-            continue
-        if check_ind(tmp1, tmp2, ml_ind1, ml_ind2):
-            continue
-        if markers[0, tmp1] < gene_low1 and markers[1, tmp1] > gene_high2 and markers[0, tmp2] < gene_low1 and markers[1, tmp2] > gene_high2:
-            if error_num >= error_rate*num0:
-                ml_ind1.append(tmp1)
-                ml_ind2.append(tmp2)
-            else:
-                cl_ind1.append(tmp1)
-                cl_ind2.append(tmp2)
-                error_num += 1
-        elif markers[1, tmp1] < gene_low2 and markers[0, tmp1] > gene_high1 and markers[1, tmp2] < gene_low2 and markers[0, tmp2] > gene_high1:
-            if error_num >= error_rate*num0:
-                ml_ind1.append(tmp1)
-                ml_ind2.append(tmp2)
-            else:
-                cl_ind1.append(tmp1)
-                cl_ind2.append(tmp2)
-                error_num += 1
-        elif markers[0, tmp1] < gene_low1 and markers[1, tmp1] > gene_high2 and markers[0, tmp2] > gene_high1 and markers[1, tmp2] < gene_low2:
-            if error_num >= error_rate*num0:
-                cl_ind1.append(tmp1)
-                cl_ind2.append(tmp2)
-            else:
-                ml_ind1.append(tmp1)
-                ml_ind2.append(tmp2) 
-                error_num += 1
-        elif markers[0, tmp2] < gene_low1 and markers[1, tmp2] > gene_high2 and markers[0, tmp1] > gene_high1 and markers[1, tmp1] < gene_low2:
-            if error_num >= error_rate*num0:
-                cl_ind1.append(tmp1)
-                cl_ind2.append(tmp2)
-            else:
-                ml_ind1.append(tmp1)
-                ml_ind2.append(tmp2) 
-                error_num += 1
-        else:
-            continue
-        num -= 1
-    ml_ind1, ml_ind2, cl_ind1, cl_ind2 = np.array(ml_ind1), np.array(ml_ind2), np.array(cl_ind1), np.array(cl_ind2)
-    ml_index = np.random.permutation(ml_ind1.shape[0])
-    cl_index = np.random.permutation(cl_ind1.shape[0])
-    ml_ind1 = ml_ind1[ml_index]
-    ml_ind2 = ml_ind2[ml_index]
-    cl_ind1 = cl_ind1[cl_index]
-    cl_ind2 = cl_ind2[cl_index]
-    return ml_ind1, ml_ind2, cl_ind1, cl_ind2, error_num
-
-
-def generate_random_pair_from_markers_2(markers, num, low=0.25, high=0.75, error_rate=0):
-    """
-    Generate random pairwise constraints.
-    """
-    ml_ind1, ml_ind2 = [], []
-    cl_ind1, cl_ind2 = [], []
-
-    def check_ind(ind1, ind2, ind_list1, ind_list2):
-        for (l1, l2) in zip(ind_list1, ind_list2):
-                if ind1 == l1 and ind2 == l2:
-                    return True
-        return False
-
-    gene_low1 = np.quantile(markers[0], low)
-    gene_high1 = np.quantile(markers[0], high)
-    gene_low2 = np.quantile(markers[1], low)
-    gene_high2 = np.quantile(markers[1], high)
-
-    error_num = 0
-    num0 = num
-    while num > 0:
-        tmp1 = random.randint(0, markers.shape[1] - 1)
-        tmp2 = random.randint(0, markers.shape[1] - 1)
-        if tmp1 == tmp2:
-            continue
-        if check_ind(tmp1, tmp2, ml_ind1, ml_ind2):
-            continue
-        if markers[0, tmp1] < gene_low1 and markers[1, tmp1] > gene_high2 and markers[0, tmp2] > gene_high1 and markers[1, tmp2] < gene_low2:
-            if error_num >= error_rate*num0:
-                cl_ind1.append(tmp1)
-                cl_ind2.append(tmp2)
-            else:
-                ml_ind1.append(tmp1)
-                ml_ind2.append(tmp2) 
-                error_num += 1
-        elif markers[0, tmp2] < gene_low1 and markers[1, tmp2] > gene_high2 and markers[0, tmp1] > gene_high1 and markers[1, tmp1] < gene_low2:
-            if error_num >= error_rate*num0:
-                cl_ind1.append(tmp1)
-                cl_ind2.append(tmp2)
-            else:
-                ml_ind1.append(tmp1)
-                ml_ind2.append(tmp2) 
-                error_num += 1
-        else:
-            continue
-        num -= 1
-    ml_ind1, ml_ind2, cl_ind1, cl_ind2 = np.array(ml_ind1), np.array(ml_ind2), np.array(cl_ind1), np.array(cl_ind2)
-    ml_index = np.random.permutation(ml_ind1.shape[0])
-    cl_index = np.random.permutation(cl_ind1.shape[0])
-    ml_ind1 = ml_ind1[ml_index]
-    ml_ind2 = ml_ind2[ml_index]
-    cl_ind1 = cl_ind1[cl_index]
-    cl_ind2 = cl_ind2[cl_index]
-    return ml_ind1, ml_ind2, cl_ind1, cl_ind2, error_num
-
-
-def generate_random_pair_from_markers_3(markers, num, low1=0.4, high1=0.6, low2=0.2, high2=0.8, error_rate=0):
+def generate_random_pair_from_CD_markers(markers, num, low1=0.4, high1=0.6, low2=0.2, high2=0.8):
     """
     Generate random pairwise constraints.
     """
@@ -295,8 +155,6 @@ def generate_random_pair_from_markers_3(markers, num, low1=0.4, high1=0.6, low2=
     gene_low4 = np.quantile(markers[3], low2)
     gene_high4 = np.quantile(markers[3], high2)
 
-    error_num = 0
-    num0 = num
     while num > 0:
         tmp1 = random.randint(0, markers.shape[1] - 1)
         tmp2 = random.randint(0, markers.shape[1] - 1)
@@ -305,61 +163,26 @@ def generate_random_pair_from_markers_3(markers, num, low1=0.4, high1=0.6, low2=
         if check_ind(tmp1, tmp2, ml_ind1, ml_ind2):
             continue
         if markers[0, tmp1] < gene_low1 and markers[1, tmp1] > gene_high2 and markers[0, tmp2] > gene_high1 and markers[1, tmp2] < gene_low2:
-            if error_num >= error_rate*num0:
-                cl_ind1.append(tmp1)
-                cl_ind2.append(tmp2)
-            else:
-                ml_ind1.append(tmp1)
-                ml_ind2.append(tmp2) 
-                error_num += 1
+            cl_ind1.append(tmp1)
+            cl_ind2.append(tmp2)
         elif markers[0, tmp2] < gene_low1 and markers[1, tmp2] > gene_high2 and markers[0, tmp1] > gene_high1 and markers[1, tmp1] < gene_low2:
-            if error_num >= error_rate*num0:
-                cl_ind1.append(tmp1)
-                cl_ind2.append(tmp2)
-            else:
-                ml_ind1.append(tmp1)
-                ml_ind2.append(tmp2) 
-                error_num += 1
+            cl_ind1.append(tmp1)
+            cl_ind2.append(tmp2)
         elif markers[1, tmp1] > gene_high2_ml and markers[2, tmp1] > gene_high3 and markers[1, tmp2] > gene_high2_ml and markers[2, tmp2] > gene_high3:
-            if error_num >= error_rate*num0:
-                cl_ind1.append(tmp1)
-                cl_ind2.append(tmp2)
-            else:
-                ml_ind1.append(tmp1)
-                ml_ind2.append(tmp2) 
-                error_num += 1
+            ml_ind1.append(tmp1)
+            ml_ind2.append(tmp2)
         elif markers[1, tmp1] > gene_high2_ml and markers[2, tmp1] < gene_low3 and markers[1, tmp2] > gene_high2_ml and markers[2, tmp2] < gene_low3:
-            if error_num >= error_rate*num0:
-                cl_ind1.append(tmp1)
-                cl_ind2.append(tmp2)
-            else:
-                ml_ind1.append(tmp1)
-                ml_ind2.append(tmp2) 
-                error_num += 1
+            ml_ind1.append(tmp1)
+            ml_ind2.append(tmp2)
         elif markers[0, tmp1] > gene_high1_ml and markers[2, tmp1] > gene_high3 and markers[1, tmp2] > gene_high1_ml and markers[2, tmp2] > gene_high3:
-            if error_num >= error_rate*num0:
-                cl_ind1.append(tmp1)
-                cl_ind2.append(tmp2)
-            else:
-                ml_ind1.append(tmp1)
-                ml_ind2.append(tmp2) 
-                error_num += 1
+            ml_ind1.append(tmp1)
+            ml_ind2.append(tmp2)
         elif markers[0, tmp1] > gene_high1_ml and markers[2, tmp1] < gene_low3 and markers[3, tmp1] > gene_high4 and markers[1, tmp2] > gene_high1_ml and markers[2, tmp2] < gene_low3 and markers[3, tmp2] > gene_high4:
-            if error_num >= error_rate*num0:
-                cl_ind1.append(tmp1)
-                cl_ind2.append(tmp2)
-            else:
-                ml_ind1.append(tmp1)
-                ml_ind2.append(tmp2) 
-                error_num += 1
+            ml_ind1.append(tmp1)
+            ml_ind2.append(tmp2)
         elif markers[0, tmp1] > gene_high1_ml and markers[2, tmp1] < gene_low3 and markers[3, tmp1] < gene_low4 and markers[1, tmp2] > gene_high1_ml and markers[2, tmp2] < gene_low3 and markers[3, tmp2] < gene_low4:
-            if error_num >= error_rate*num0:
-                cl_ind1.append(tmp1)
-                cl_ind2.append(tmp2)
-            else:
-                ml_ind1.append(tmp1)
-                ml_ind2.append(tmp2) 
-                error_num += 1
+            ml_ind1.append(tmp1)
+            ml_ind2.append(tmp2)
         else:
             continue
         num -= 1
@@ -370,10 +193,10 @@ def generate_random_pair_from_markers_3(markers, num, low1=0.4, high1=0.6, low2=
     ml_ind2 = ml_ind2[ml_index]
     cl_ind1 = cl_ind1[cl_index]
     cl_ind2 = cl_ind2[cl_index]
-    return ml_ind1, ml_ind2, cl_ind1, cl_ind2, error_num
+    return ml_ind1, ml_ind2, cl_ind1, cl_ind2
 
 
-def generate_random_pair_from_embedding_clustering(latent_embedding, num, n_clusters, ML=0.005, CL=0.8, error_rate=0):
+def generate_random_pair_from_embedding_clustering(latent_embedding, num, n_clusters, ML=0.005, CL=0.8):
     """
     Generate random pairwise constraints.
     """
@@ -396,8 +219,7 @@ def generate_random_pair_from_embedding_clustering(latent_embedding, num, n_clus
     cutoff_ML = np.quantile(latent_dist_vec, ML)
     cutoff_CL = np.quantile(latent_dist_vec, CL)
 
-    error_num = 0
-    num0 = num
+
     while num > 0:
         tmp1 = random.randint(0, latent_embedding.shape[0] - 1)
         tmp2 = random.randint(0, latent_embedding.shape[0] - 1)
@@ -406,21 +228,11 @@ def generate_random_pair_from_embedding_clustering(latent_embedding, num, n_clus
         if check_ind(tmp1, tmp2, ml_ind1, ml_ind2):
             continue
         if y_pred[tmp1]==y_pred[tmp2]:
-            if error_num >= error_rate*num0:
-                ml_ind1.append(tmp1)
-                ml_ind2.append(tmp2)
-            else:
-                cl_ind1.append(tmp1)
-                cl_ind2.append(tmp2)
-                error_num += 1
+            ml_ind1.append(tmp1)
+            ml_ind2.append(tmp2)
         elif y_pred[tmp1]!=y_pred[tmp2] and norm(latent_embedding[tmp1] - latent_embedding[tmp2], 2) > cutoff_CL:
-            if error_num >= error_rate*num0:
-                cl_ind1.append(tmp1)
-                cl_ind2.append(tmp2)
-            else:
-                ml_ind1.append(tmp1)
-                ml_ind2.append(tmp2) 
-                error_num += 1
+            cl_ind1.append(tmp1)
+            cl_ind2.append(tmp2)
         else:
             continue
         num -= 1
@@ -431,22 +243,6 @@ def generate_random_pair_from_embedding_clustering(latent_embedding, num, n_clus
     ml_ind2 = ml_ind2[ml_index]
     cl_ind1 = cl_ind1[cl_index]
     cl_ind2 = cl_ind2[cl_index]
-    return ml_ind1, ml_ind2, cl_ind1, cl_ind2, error_num
+    return ml_ind1, ml_ind2, cl_ind1, cl_ind2
 
 
-def check_pairs(ml_ind1, ml_ind2, cl_ind1, cl_ind2, y):
-    ml_correct = 0
-    ml_wrong = 0
-    cl_correct = 0
-    cl_wrong = 0
-    for i in range(len(ml_ind1)):
-        if y[ml_ind1[i]] == y[ml_ind2[i]]:
-            ml_correct += 1
-        else:
-            ml_wrong += 1
-    for i in range(len(cl_ind1)):
-        if y[cl_ind1[i]] == y[cl_ind2[i]]:
-            cl_wrong += 1
-        else:
-            cl_correct += 1
-    return ml_correct, ml_wrong, cl_correct, cl_wrong

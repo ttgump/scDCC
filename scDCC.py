@@ -25,7 +25,7 @@ def buildNetwork(layers, type, activation="relu"):
 
 class scDCC(nn.Module):
     def __init__(self, input_dim, z_dim, n_clusters, encodeLayer=[], decodeLayer=[], 
-            activation="relu", sigma=1., alpha=1., gamma=1.):
+            activation="relu", sigma=1., alpha=1., gamma=1., ml_weight=1., cl_weight=1.):
         super(scDCC, self).__init__()
         self.z_dim = z_dim
         self.n_clusters = n_clusters
@@ -33,6 +33,8 @@ class scDCC(nn.Module):
         self.sigma = sigma
         self.alpha = alpha
         self.gamma = gamma
+        self.ml_weight = ml_weight
+        self.cl_weight = cl_weight
         self.encoder = buildNetwork([input_dim]+encodeLayer, type="encode", activation=activation)
         self.decoder = buildNetwork([z_dim]+decodeLayer, type="decode", activation=activation)
         self._enc_mu = nn.Linear(encodeLayer[-1], z_dim)
@@ -103,10 +105,10 @@ class scDCC(nn.Module):
     def pairwise_loss(self, p1, p2, cons_type):
         if cons_type == "ML":
             ml_loss = torch.mean(-torch.log(torch.sum(p1 * p2, dim=1)))
-            return ml_loss
+            return self.ml_weight*ml_loss
         else:
             cl_loss = torch.mean(-torch.log(1.0 - torch.sum(p1 * p2, dim=1)))
-            return cl_loss
+            return self.cl_weightcl_loss
 
     def pretrain_autoencoder(self, x, X_raw, size_factor, batch_size=256, lr=0.001, epochs=400, ae_save=True, ae_weights='AE_weights.pth.tar'):
         use_cuda = torch.cuda.is_available()
