@@ -21,3 +21,13 @@ gamma: weight of clustering loss
 ml_weight: weight of must-link loss
 
 cl_weight: weight of cannot-link loss
+
+Files:
+
+scDCC.py -- implementation of scDCC algorithm
+
+scDCC_pairwise.py -- the wrapper to run scDCC on the datasets in Figure 2-4
+
+scDCC_pairwise_CITE_PBMC.py -- the wrapper to run scDCC on the 10X CITE PBMC dataset (Figure 5)
+
+scDCC_pairwise_Human_liver.py -- the wrapper to run scDCC on the human liver dataset (Figure 6)
