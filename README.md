@@ -13,7 +13,11 @@ Nvidia Tesla P100
 Arguments:
 
 n_clusters: number of clusters
+
 n_pairwise: number of pairwise constraints want to generate
+
 gamma: weight of clustering loss
+
 ml_weight: weight of must-link loss
+
 cl_weight: weight of cannot-link loss
