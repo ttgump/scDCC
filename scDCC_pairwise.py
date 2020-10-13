@@ -37,6 +37,10 @@ if __name__ == "__main__":
     parser.add_argument('--pretrain_epochs', default=300, type=int)
     parser.add_argument('--gamma', default=1., type=float,
                         help='coefficient of clustering loss')
+    parser.add_argument('--ml_weight', default=1., type=float,
+                        help='coefficient of must-link loss')
+    parser.add_argument('--cl_weight', default=1., type=float,
+                        help='coefficient of cannot-link loss')
     parser.add_argument('--update_interval', default=1, type=int)
     parser.add_argument('--tol', default=0.001, type=float)
     parser.add_argument('--ae_weights', default=None)
@@ -95,7 +99,8 @@ if __name__ == "__main__":
     sd = 2.5
 
     model = scDCC(input_dim=adata.n_vars, z_dim=32, n_clusters=args.n_clusters, 
-                encodeLayer=[256, 64], decodeLayer=[64, 256], sigma=sd, gamma=args.gamma).cuda()
+                encodeLayer=[256, 64], decodeLayer=[64, 256], sigma=sd, gamma=args.gamma,
+                ml_weight=args.ml_weight, cl_weight=args.ml_weight).cuda()
     
     print(str(model))
 
