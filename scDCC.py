@@ -108,7 +108,7 @@ class scDCC(nn.Module):
             return self.ml_weight*ml_loss
         else:
             cl_loss = torch.mean(-torch.log(1.0 - torch.sum(p1 * p2, dim=1)))
-            return self.cl_weightcl_loss
+            return self.cl_weight*cl_loss
 
     def pretrain_autoencoder(self, x, X_raw, size_factor, batch_size=256, lr=0.001, epochs=400, ae_save=True, ae_weights='AE_weights.pth.tar'):
         use_cuda = torch.cuda.is_available()
