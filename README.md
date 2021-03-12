@@ -1,4 +1,4 @@
-# scDCC -- Single Cell Deep Constraint Clustering
+# scDCC -- Single Cell Deep Constrained Clustering
 
 Requirements:
 
