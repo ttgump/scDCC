@@ -84,7 +84,6 @@ class scDCC(nn.Module):
             self.cuda()
         
         encoded = []
-        self.eval()
         num = X.shape[0]
         num_batch = int(math.ceil(1.0*X.shape[0]/batch_size))
         for batch_idx in range(num_batch):
