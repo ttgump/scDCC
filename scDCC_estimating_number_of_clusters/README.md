@@ -16,7 +16,7 @@ python scDCC_pairwise.py --data_file data.h5 --pos_pairs pos_pairs.txt --neg_pai
 --data_file: file name of data.<br/>
 --pos_pairs: file name to store must-link pairs.<br/>
 --neg_pairs: file name to store cannot-link pairs.<br/>
-Pairs should be stored in a two-column matrix, separated by ",". One row represents one pair with index of cells, and index starts with zero.
+Pairs should be stored in a two-column matrix, separated by ",". One row represents one pair with index of cells, and index starts with zero.<br/>
 --maxiter: max number of iterations in the clustering stage, default = 2000.<br/>
 --pretrain_epochs: pretraining iterations, default = 300.<br/>
 --gamma: coefficient of the clustering loss, default = 1.<br/>
