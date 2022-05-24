@@ -28,11 +28,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='train',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--n_clusters', default=0, type=int)
-    parser.add_argument('--knn', default=10, type=int, 
+    parser.add_argument('--knn', default=20, type=int, 
                         help='number of nearest neighbors, used by the Louvain algorithm')
-    parser.add_argument('--resolution', default=1, type=float, 
+    parser.add_argument('--resolution', default=0.8, type=float, 
                         help='resolution parameter, used by the Louvain algorithm, larger value for more number of clusters')
-    parser.add_argument('--select_genes', default=2000, type=int, 
+    parser.add_argument('--select_genes', default=0, type=int, 
                         help='number of selected genes, 0 means using all genes')
     parser.add_argument('--batch_size', default=256, type=int)
     parser.add_argument('--data_file', default='data.h5')
