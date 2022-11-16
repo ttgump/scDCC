@@ -37,3 +37,5 @@ scDCC_pairwise_CITE_PBMC.py -- the wrapper to run scDCC on the 10X CITE PBMC dat
 scDCC_pairwise_Human_liver.py -- the wrapper to run scDCC on the human liver dataset (Figure 6)
 
 In the folder "scDCC_estimating_number_of_clusters" I add a version of scDCC that can be using for general datasets without knowning number of clusters.
+
+Datasets used in the study is available in: https://figshare.com/articles/dataset/scDCC_data/21563517
