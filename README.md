@@ -4,7 +4,7 @@ Clustering is a critical step in single cell-based studies. Most existing method
 
 ![alt text](https://github.com/ttgump/scDCC/blob/master/image.png?raw=True)
 
-Requirements:
+**Requirements:**
 
 Python --- 3.6.8
 
@@ -14,7 +14,7 @@ Scanpy --- 1.0.4
 
 Nvidia Tesla P100
 
-Arguments:
+**Arguments:**
 
 n_clusters: number of clusters
 
@@ -26,7 +26,7 @@ ml_weight: weight of must-link loss
 
 cl_weight: weight of cannot-link loss
 
-Files:
+**Files:**
 
 scDCC.py -- implementation of scDCC algorithm
 
@@ -38,4 +38,14 @@ scDCC_pairwise_Human_liver.py -- the wrapper to run scDCC on the human liver dat
 
 In the folder "scDCC_estimating_number_of_clusters" I add a version of scDCC that can be using for general datasets without knowning number of clusters.
 
-Datasets used in the study is available in: https://figshare.com/articles/dataset/scDCC_data/21563517
+**Usage:**
+
+```bash
+python scDCC_pairwise_CITE_PBMC.py
+```
+
+```bash
+python scDCC_pairwise_Human_liver.py
+```
+
+**Datasets used in the study is available in:** https://figshare.com/articles/dataset/scDCC_data/21563517
