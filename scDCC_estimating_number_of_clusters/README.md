@@ -4,7 +4,9 @@ A modified version of scDCC, I add two features: 1. estimating number of cluster
 
 # Usage:
 
+```sh
 python scDCC_pairwise.py --data_file data.h5 --pos_pairs pos_pairs.txt --neg_pairs neg_pairs.txt
+```
 
 # Parameters:
 
