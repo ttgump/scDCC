@@ -2,13 +2,13 @@
 
 A modified version of scDCC, I add two features: 1. estimating number of clusters if not specified by user; 2. selecting highly informative genes.
 
-# Usage:
+## Usage
 
 ```sh
 python scDCC_pairwise.py --data_file data.h5 --pos_pairs pos_pairs.txt --neg_pairs neg_pairs.txt
 ```
 
-# Parameters:
+## Parameters
 
 --n_clusters: number of clusters, if setting as 0, it will be estimated by the Louvain alogrithm on the latent features.<br/>
 --knn: number of nearest neighbors, which is used in the Louvain algorithm, default = 20.<br/>
