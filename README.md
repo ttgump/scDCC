@@ -1,6 +1,6 @@
 # scDCC -- Single Cell Deep Constrained Clustering
 
-Clustering is a critical step in single cell-based studies. Most existing methods support unsupervised clustering without the a priori exploitation of any domain knowledge. When confronted by the high dimensionality and pervasive dropout events of scRNA-Seq data, purely unsupervised clustering methods may not produce biologically interpretable clusters, which complicates cell type assignment. In such cases, the only recourse is for the user to manually and repeatedly tweak clustering parameters until acceptable clusters are found. Consequently, the path to obtaining biologically meaningful clusters can be ad hoc and laborious. Here we report a principled clustering method named scDCC, that integrates domain knowledge into the clustering step. Experiments on various scRNA-seq datasets from thousands to tens of thousands of cells show that scDCC can significantly improve clustering performance, facilitating the interpretability of clusters and downstream analyses, such as cell type assignment. https://doi.org/10.1038/s41467-021-22008-3
+Clustering is a critical step in single cell-based studies. Most existing methods support unsupervised clustering without the a priori exploitation of any domain knowledge. When confronted by the high dimensionality and pervasive dropout events of scRNA-Seq data, purely unsupervised clustering methods may not produce biologically interpretable clusters, which complicates cell type assignment. In such cases, the only recourse is for the user to manually and repeatedly tweak clustering parameters until acceptable clusters are found. Consequently, the path to obtaining biologically meaningful clusters can be ad hoc and laborious. Here we report a principled clustering method named scDCC, that integrates domain knowledge into the clustering step. Experiments on various scRNA-seq datasets from thousands to tens of thousands of cells show that scDCC can significantly improve clustering performance, facilitating the interpretability of clusters and downstream analyses, such as cell type assignment.
 
 ## Table of contents
 - [Network diagram](#diagram)
@@ -9,6 +9,7 @@ Clustering is a critical step in single cell-based studies. Most existing method
 - [Parameters](#parameters)
 - [Files](#files)
 - [Datasets](#datasets)
+- [Reference](#reference)
 - [Contact](#contact)
 
 ## <a name="diagram"></a>Network diagram
@@ -55,6 +56,10 @@ In the folder "scDCC_estimating_number_of_clusters" I add a version of scDCC tha
 ## <a name="datasets"></a>Datasets
 
 Datasets used in the study is available in: https://figshare.com/articles/dataset/scDCC_data/21563517
+
+## <a name="reference"></a>Reference
+
+Tian, T., Zhang, J., Lin, X., Wei, Z., & Hakonarson, H. (2021). Model-based deep embedding for constrained clustering analysis of single cell RNA-seq data. *Nature communications*, 12(1), 1873. https://doi.org/10.1038/s41467-021-22008-3.
 
 ## <a name="contact"></a>Contact
 
