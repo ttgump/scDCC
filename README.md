@@ -35,23 +35,23 @@ python scDCC_pairwise_Human_liver.py
 
 ## <a name="parameters"></a>Parameters
 
---n_clusters: number of clusters<br/>
---n_pairwise: number of pairwise constraints want to generate<br/>
---gamma: weight of clustering loss<br/>
---ml_weight: weight of must-link loss<br/>
---cl_weight: weight of cannot-link loss<br/>
+**--n_clusters:** number of clusters<br/>
+**--n_pairwise:** number of pairwise constraints want to generate<br/>
+**--gamma:** weight of clustering loss<br/>
+**--ml_weight:** weight of must-link loss<br/>
+**--cl_weight:** weight of cannot-link loss<br/>
 
 ## <a name="files"></a>Files
 
-scDCC.py -- implementation of scDCC algorithm
+**scDCC.py** -- implementation of scDCC algorithm
 
-scDCC_pairwise.py -- the wrapper to run scDCC on the datasets in Figure 2-4
+**scDCC_pairwise.py** -- the wrapper to run scDCC on the datasets in Figure 2-4
 
-scDCC_pairwise_CITE_PBMC.py -- the wrapper to run scDCC on the 10X CITE PBMC dataset (Figure 5)
+**scDCC_pairwise_CITE_PBMC.py** -- the wrapper to run scDCC on the 10X CITE PBMC dataset (Figure 5)
 
-scDCC_pairwise_Human_liver.py -- the wrapper to run scDCC on the human liver dataset (Figure 6)
+**scDCC_pairwise_Human_liver.py** -- the wrapper to run scDCC on the human liver dataset (Figure 6)
 
-In the folder "scDCC_estimating_number_of_clusters" I add a version of scDCC that can be using for general datasets without knowning number of clusters.
+In the folder **scDCC_estimating_number_of_clusters** I implement a version of scDCC that can be using for general datasets without knowning number of clusters.
 
 ## <a name="datasets"></a>Datasets
 
